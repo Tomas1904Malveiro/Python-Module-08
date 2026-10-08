@@ -4,9 +4,10 @@ from typing import Any
 
 
 PACKAGES: dict[str, str] = {
-"pandas": "Data manipulation ready",
-"numpy": "Numerical computation ready",
-"matplotlib": "Visualization ready"}
+    "pandas": "Data manipulation ready",
+    "numpy": "Numerical computation ready",
+    "matplotlib": "Visualization ready",
+}
 
 
 def check_packages() -> list[str]:
@@ -50,23 +51,60 @@ def generate_data() -> Any:
 def analyze_data(data: Any) -> Any:
     import pandas as pd
 
-    pd.DataFrame(generate_data(), columns=[data])
-    statics = data.std()
-    print(statics)
+    df = pd.DataFrame(data, columns=["signal"])
+    print(df.describe())
+    return df
+
+
+def create_visualization(dataframe: Any) -> None:
+    import matplotlib
+
+    matplotlib.use("Agg")
+
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+
+    ax.hist(dataframe["signal"], bins=30)
+    ax.set_title("Matrix signal distribution")
+    ax.set_xlabel("Signal")
+    ax.set_ylabel("Frequency")
+    ax.grid(True)
+
+    fig.savefig("matrix_analysis.png")
+    plt.close(fig)
+
+
+def compare_pip_poetry() -> None:
+    print("pip is a basic package installer.")
+    print()
+    print("Poetry manages your entire project "
+          "lifecycle, including virtual environments.")
+    print()
+    print("pip uses flat text files like requirements.txt.")
+    print()
+    print("Poetry uses a centralized pyproject.toml.")
+
 
 if __name__ == "__main__":
     print("LOADING STATUS: Loading programs...")
     print()
     print("Checking dependencies:")
+
     if check_packages():
         show_install_help()
         sys.exit(1)
     else:
+        print()
         print("Analyzing Matrix data...")
         print("Processing 1000 data points...")
         data = generate_data()
         dataframe = analyze_data(data)
+
         print("Generating visualization...")
+        create_visualization(dataframe)
+
         print()
+        compare_pip_poetry()
         print("Analysis complete!")
         print("Results saved to: matrix_analysis.png")
