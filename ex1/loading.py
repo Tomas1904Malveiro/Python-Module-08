@@ -40,7 +40,7 @@ def show_install_help() -> None:
 
 
 def generate_data() -> Any:
-    import numpy as np
+    import numpy as np  # type: ignore
 
     rng = np.random.default_rng(42)
     data = rng.normal(0, 1, 1000)
@@ -49,19 +49,19 @@ def generate_data() -> Any:
 
 
 def analyze_data(data: Any) -> Any:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 
     df = pd.DataFrame(data, columns=["signal"])
     print(df.describe())
     return df
 
 
-def create_visualization(dataframe: Any) -> None:
-    import matplotlib
+def create_visualization(dataframe: Any) -> bool:
+    import matplotlib  # type: ignore
 
     matplotlib.use("Agg")
 
-    import matplotlib.pyplot as plt
+    import matplotlib.pyplot as plt  # type: ignore
 
     fig, ax = plt.subplots(figsize=(8, 5))
 
@@ -71,19 +71,38 @@ def create_visualization(dataframe: Any) -> None:
     ax.set_ylabel("Frequency")
     ax.grid(True)
 
-    fig.savefig("matrix_analysis.png")
-    plt.close(fig)
+    try:
+        fig.savefig("matrix_analysis.png")
+    except OSError as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return False
+    finally:
+        plt.close(fig)
+
+    return True
 
 
 def compare_pip_poetry() -> None:
-    print("pip is a basic package installer.")
+    from importlib.metadata import PackageNotFoundError, version
+
+    for name in PACKAGES:
+        try:
+            installed_version = version(name)
+        except PackageNotFoundError:
+            print(f"{name} not installed")
+        else:
+            print(f"Package: {name}, version: {installed_version}")
+
     print()
-    print("Poetry manages your entire project "
-          "lifecycle, including virtual environments.")
+    print(sys.executable)
+    print(sys.prefix)
     print()
-    print("pip uses flat text files like requirements.txt.")
-    print()
-    print("Poetry uses a centralized pyproject.toml.")
+    print("Lock file: Poetry creates `poetry.lock` with exact versions"
+          ", whereas pip with a simple `requirements.txt` does not.")
+    print("Virtual environment: pip uses the one you create, while "
+          "Poetry creates and manages one for you.")
+    print("Dependency resolution: Poetry resolves versions holistically,"
+          " whereas pip installs package by package.")
 
 
 if __name__ == "__main__":
@@ -98,13 +117,18 @@ if __name__ == "__main__":
         print()
         print("Analyzing Matrix data...")
         print("Processing 1000 data points...")
+        print()
         data = generate_data()
         dataframe = analyze_data(data)
 
-        print("Generating visualization...")
-        create_visualization(dataframe)
-
         print()
-        compare_pip_poetry()
-        print("Analysis complete!")
-        print("Results saved to: matrix_analysis.png")
+        print("Generating visualization...")
+
+        if create_visualization(dataframe):
+            print()
+            compare_pip_poetry()
+            print()
+            print("Analysis complete!")
+            print("Results saved to: matrix_analysis.png")
+        else:
+            sys.exit(1)
